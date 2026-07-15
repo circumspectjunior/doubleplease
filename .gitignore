@@ -17,6 +17,8 @@ env/
 # Data
 backend/data/*.db
 backend/data/*.sqlite3
+backend/data/logs/
+backend/data/reports/*.md
 
 # Node / frontend
 frontend/node_modules/

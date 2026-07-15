@@ -3,10 +3,10 @@ from __future__ import annotations
 import argparse
 import sqlite3
 
-import requests
-
 from src import config
 from src.db import init_db
+from src.http_utils import get_json
+from src.team_matching import find_or_create_team
 
 FINISHED_STATUSES = {"FT", "AET", "PEN"}
 
@@ -14,14 +14,12 @@ FINISHED_STATUSES = {"FT", "AET", "PEN"}
 def fetch_fixtures(league_id: int, season: int, api_key: str | None = None) -> list[dict]:
     """Calls API-Football v3 /fixtures for a league/season and returns the raw response list."""
     key = api_key or config.API_FOOTBALL_KEY
-    resp = requests.get(
+    data = get_json(
         f"{config.API_FOOTBALL_BASE_URL}/fixtures",
-        headers={"x-apisports-key": key},
         params={"league": league_id, "season": season},
-        timeout=30,
+        headers={"x-apisports-key": key},
     )
-    resp.raise_for_status()
-    return resp.json().get("response", [])
+    return data.get("response", [])
 
 
 def normalize_fixture(raw: dict) -> dict:
@@ -41,11 +39,11 @@ def normalize_fixture(raw: dict) -> dict:
 
 
 def upsert_team(conn: sqlite3.Connection, name: str, league: str) -> int:
-    conn.execute(
-        "INSERT OR IGNORE INTO teams (name, league) VALUES (?, ?)", (name, league)
-    )
-    row = conn.execute("SELECT id FROM teams WHERE name = ?", (name,)).fetchone()
-    return row["id"]
+    """Fuzzy-matched rather than exact-match: API-Football itself spells some clubs
+    inconsistently across seasons (e.g. "VfL Bochum" vs "Vfl Bochum", "Bayern Munich"
+    vs "Bayern München"), which would otherwise fragment one club's historical
+    record across two team rows and corrupt its attack/defense sample size."""
+    return find_or_create_team(conn, name, league)
 
 
 def upsert_match(conn: sqlite3.Connection, fixture: dict) -> int:
