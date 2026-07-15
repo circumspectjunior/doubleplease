@@ -34,7 +34,6 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  background-image: linear-gradient(180deg, var(--pitch) 0%, var(--pitch) 220px, var(--chalk) 220px);
 }
 
 #root {

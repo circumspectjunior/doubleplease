@@ -43,57 +43,59 @@ export default function App() {
   }, [shortlist, sortBy]);
 
   return (
-    <div className="app">
+    <>
       <Header status={status} />
 
-      <main className="app__main">
-        <LeagueFilter leagues={leagues} active={activeLeague} onChange={setActiveLeague} />
+      <div className="app">
+        <main className="app__main">
+          <LeagueFilter leagues={leagues} active={activeLeague} onChange={setActiveLeague} />
 
-        <div className="sort-row">
-          <span className="sort-row__label">Sort by</span>
-          <div className="sort-row__options">
-            <button
-              type="button"
-              className={sortBy === "edge" ? "is-active" : ""}
-              onClick={() => setSortBy("edge")}
-            >
-              Edge
-            </button>
-            <button
-              type="button"
-              className={sortBy === "date" ? "is-active" : ""}
-              onClick={() => setSortBy("date")}
-            >
-              Kickoff date
-            </button>
+          <div className="sort-row">
+            <span className="sort-row__label">Sort by</span>
+            <div className="sort-row__options">
+              <button
+                type="button"
+                className={sortBy === "edge" ? "is-active" : ""}
+                onClick={() => setSortBy("edge")}
+              >
+                Edge
+              </button>
+              <button
+                type="button"
+                className={sortBy === "date" ? "is-active" : ""}
+                onClick={() => setSortBy("date")}
+              >
+                Kickoff date
+              </button>
+            </div>
           </div>
-        </div>
 
-        {error && <p className="app__error">{error}</p>}
+          {error && <p className="app__error">{error}</p>}
 
-        {!error && !shortlist && <p className="app__loading">Loading this week's shortlist…</p>}
+          {!error && !shortlist && <p className="app__loading">Loading this week's shortlist…</p>}
 
-        {shortlist && sortedTrusted.length === 0 && (
-          <p className="app__empty">
-            No fixtures currently clear both the edge and data-reliability bar
-            {activeLeague ? ` for ${activeLeague}` : ""}.
-          </p>
-        )}
+          {shortlist && sortedTrusted.length === 0 && (
+            <p className="app__empty">
+              No fixtures currently clear both the edge and data-reliability bar
+              {activeLeague ? ` for ${activeLeague}` : ""}.
+            </p>
+          )}
 
-        {shortlist && sortedTrusted.length > 0 && (
-          <ol className="pick-list">
-            {sortedTrusted.map((pick, index) => (
-              <PickCard key={`${pick.match_date}-${pick.home_team}-${pick.away_team}`} rank={index + 1} pick={pick} />
-            ))}
-          </ol>
-        )}
+          {shortlist && sortedTrusted.length > 0 && (
+            <ol className="pick-list">
+              {sortedTrusted.map((pick, index) => (
+                <PickCard key={`${pick.match_date}-${pick.home_team}-${pick.away_team}`} rank={index + 1} pick={pick} />
+              ))}
+            </ol>
+          )}
 
-        {shortlist && <Bench picks={shortlist.excluded} />}
+          {shortlist && <Bench picks={shortlist.excluded} />}
 
-        <CalibrationSection results={calibration} />
-      </main>
+          <CalibrationSection results={calibration} />
+        </main>
 
-      <Disclaimer />
-    </div>
+        <Disclaimer />
+      </div>
+    </>
   );
 }
