@@ -7,8 +7,8 @@ full design; [review.md](review.md) tracks what has actually been implemented.
 
 ```
 doubleplease/
-├── backend/     # Python data ingestion, prediction engine, value calculator
-└── frontend/    # web dashboard (not yet implemented)
+├── backend/     # Python ingestion, prediction engine, value calculator, API
+└── frontend/    # React + Vite dashboard
 ```
 
 ## Backend setup
@@ -27,9 +27,28 @@ Run tests:
 pytest
 ```
 
-Run ingestion scripts:
+Run the pipeline (or let `run_weekly_pipeline.sh` do it on the Monday cron job):
 
 ```bash
 python -m src.ingest_fixtures --league 39 --season 2026
 python -m src.ingest_odds
+python -m src.model_poisson
+python -m src.value_calculator
+python -m src.weekly_report
 ```
+
+Run the API (used by the frontend dashboard):
+
+```bash
+uvicorn src.api:app --port 8000
+```
+
+## Frontend setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` - expects the backend API running at `http://localhost:8000`.

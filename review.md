@@ -5,9 +5,9 @@ Tracks what has actually been implemented against [build-plan.md](build-plan.md)
 ## Repo structure
 
 Split into `backend/` (Python ingestion, prediction engine, value calculator, backtesting,
-reporting) and `frontend/` (placeholder for the Phase 6 dashboard, not yet built - the
-weekly output today is a Markdown report, not a web UI). `.env` lives in `backend/` and
-is gitignored; `backend/.env.example` documents the required keys.
+reporting, and a FastAPI layer) and `frontend/` (a React + Vite dashboard - see the
+"API + dashboard" section below). `.env` lives in `backend/` and is gitignored;
+`backend/.env.example` documents the required keys.
 
 ## Phase 1 — Fixtures ingestion (`backend/src/ingest_fixtures.py`)
 
@@ -193,12 +193,47 @@ silently; a **local cron job** was set up instead (`backend/run_weekly_pipeline.
 every Monday 9am local time via `crontab`), which uses the existing local `.env` and
 never sends keys anywhere. It only runs while the machine is on.
 
+## API + dashboard (`backend/src/api.py`, `frontend/`)
+
+A FastAPI layer (`/api/leagues`, `/api/shortlist`, `/api/calibration`, `/api/status`)
+sits in front of the same modules the CLI pipeline uses - no duplicated logic, the
+API just calls `value_calculator.get_shortlist()`, `weekly_report.split_shortlist()`,
+and `backtest.run_calibration_backtest()` directly. It's read-only by design: no
+endpoint triggers a live pipeline run, since that would mean exposing paid API calls
+(and API keys) to a web request - see the automation note in Phase 6.
+
+The frontend is a React + Vite dashboard (not the plain-HTML v2 the build plan
+originally sketched - the user asked for filtering/sorting/charts, which needs
+real interactivity). Structurally: a ranked shortlist (matching `weekly_report.py`'s
+trusted/excluded split exactly, including the same reliable-sample filtering), a
+league filter, an edge/date sort toggle, and a calibration section with one
+small-multiple chart per league (predicted-vs-actual against build-plan Section 7's
+diagonal, plus a table-view toggle for accessibility) - loaded via the `dataviz`
+skill's procedure (form → color → validate → marks → interaction → accessibility),
+using the app's own gold/pitch-green identity as the single-series hue since each
+chart facet has only one series and needs no categorical palette.
+
+**A real bug caught in verification, not just written by inspection:** the
+calibration chart's hover tooltip was originally wired to an invisible larger hit-
+circle drawn *underneath* the visible smaller dot. In a real browser the topmost
+element (the visible dot) intercepts pointer events, so the hover handler would
+silently never fire - Playwright's own hover-timeout diagnostic caught this
+(`element ... intercepts pointer events`), not manual inspection. Fixed by moving
+the hover/focus handlers to the `<g>` wrapping both circles, which is the correct
+pattern regardless of paint order.
+
+Verified with a headless-Chromium (Playwright) script rather than just `npm run
+build`: real data renders (30 ranked picks, 5 calibration charts matching the ECE
+numbers above), league filtering and sort-by-date both update the list correctly,
+the calibration hover tooltip and table-view toggle both work, and there are no
+console errors. Screenshots checked at 1200px and a 390px mobile width.
+
 ## Test status
 
-83/83 tests passing (`cd backend && pytest`). All external HTTP calls in the test
-suite are mocked with `responses`; the real API calls described above were run
-manually, once, during development to populate real data and verify the code against
-reality - not on every test run.
+89/89 tests passing (`cd backend && pytest`, includes `test_api.py`). All external
+HTTP calls in the test suite are mocked with `responses`/FastAPI's `TestClient`; the
+real API calls described above were run manually, once, during development to
+populate real data and verify the code against reality - not on every test run.
 
 ## Known limitations / what to check before trusting the weekly shortlist
 

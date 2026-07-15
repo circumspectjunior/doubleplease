@@ -1,5 +1,16 @@
 # Frontend
 
-Reserved for the web dashboard described in the build plan's Phase 6 / Section 2
-("a simple web dashboard is a natural v2"). Nothing is implemented here yet —
-Phases 1-2 are backend-only (fixtures and odds ingestion).
+React + Vite dashboard for the weekly double-chance shortlist. Reads from the
+FastAPI backend (`backend/src/api.py`) - see the root [README.md](../README.md)
+for how to run both together.
+
+## Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Expects the backend API running at `http://localhost:8000` (see
+`backend/src/api.py` - `uvicorn src.api:app --port 8000`).
